@@ -33,7 +33,7 @@ import datetime
 import calendar
 import contextlib
 import email.utils
-from typing import Optional
+from typing import Optional, Tuple, Match, AnyStr
 
 from .pdt_locales import (locales as _locales,
                           get_icu, load_locale)
@@ -228,7 +228,7 @@ def _parse_date_rfc822(dateString):
 
 VERSION_FLAG_STYLE = 1
 VERSION_CONTEXT_STYLE = 2
-
+OutPartialParseTyped = Tuple[str, time.struct_time, bool, Optional[Match[AnyStr]]]
 
 class Calendar(object):
 
@@ -1311,7 +1311,7 @@ class Calendar(object):
         else:
             return False
 
-    def _partialParseModifier(self, s, sourceTime):
+    def _partialParseModifier(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_MODIFIER, used by L{parse()}
 
@@ -1344,9 +1344,9 @@ class Calendar(object):
             s, sourceTime = self._evalModifier(parseStr, chunk1,
                                                chunk2, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseUnits(self, s, sourceTime):
+    def _partialParseUnits(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_UNITS, used by L{parse()}
 
@@ -1389,9 +1389,9 @@ class Calendar(object):
             debug and logging.debug(f'found (units) [{parseStr}][{chunk1}][{chunk2}]')
             sourceTime = self._evalUnits(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseQUnits(self, s, sourceTime):
+    def _partialParseQUnits(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_QUNITS, used by L{parse()}
 
@@ -1434,9 +1434,9 @@ class Calendar(object):
             debug and logging.debug(f'found (qunits) [{parseStr}][{chunk1}][{chunk2}]')
             sourceTime = self._evalQUnits(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseDateStr(self, s, sourceTime):
+    def _partialParseDateStr(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_DATE3, used by L{parse()}
 
@@ -1508,9 +1508,9 @@ class Calendar(object):
                 'found (date3) [%s][%s][%s]', parseStr, chunk1, chunk2)
             sourceTime = self._evalDateStr(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseDateStd(self, s, sourceTime):
+    def _partialParseDateStd(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_DATE, used by L{parse()}
 
@@ -1546,9 +1546,9 @@ class Calendar(object):
                 'found (date) [%s][%s][%s]', parseStr, chunk1, chunk2)
             sourceTime = self._evalDateStd(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseDayStr(self, s, sourceTime):
+    def _partialParseDayStr(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_DAY, used by L{parse()}
 
@@ -1584,9 +1584,9 @@ class Calendar(object):
                 'found (day) [%s][%s][%s]', parseStr, chunk1, chunk2)
             sourceTime = self._evalDayStr(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseWeekday(self, s, sourceTime):
+    def _partialParseWeekday(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_WEEKDAY, used by L{parse()}
 
@@ -1627,9 +1627,9 @@ class Calendar(object):
                 'found (weekday) [%s][%s][%s]', parseStr, chunk1, chunk2)
             sourceTime = self._evalWeekday(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseTimeStr(self, s, sourceTime):
+    def _partialParseTimeStr(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_TIME, used by L{parse()}
 
@@ -1665,9 +1665,9 @@ class Calendar(object):
                 'found (time) [%s][%s][%s]', parseStr, chunk1, chunk2)
             sourceTime = self._evalTimeStr(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseMeridian(self, s, sourceTime):
+    def _partialParseMeridian(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_TIMEHMS2, used by L{parse()}
 
@@ -1708,10 +1708,12 @@ class Calendar(object):
             if parseStr:
                 debug and logging.debug(f'found (meridian) [{parseStr}][{chunk1}][{chunk2}]')
                 sourceTime = self._evalMeridian(parseStr, sourceTime)
+        else:
+            m = None
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
-    def _partialParseTimeStd(self, s, sourceTime):
+    def _partialParseTimeStd(self, s: str, sourceTime: time.struct_time) -> OutPartialParseTyped:
         """
         test if giving C{s} matched CRE_TIMEHMS, used by L{parse()}
 
@@ -1751,7 +1753,7 @@ class Calendar(object):
                 'found (hms) [%s][%s][%s]', parseStr, chunk1, chunk2)
             sourceTime = self._evalTimeStd(parseStr, sourceTime)
 
-        return s, sourceTime, bool(parseStr)
+        return s, sourceTime, bool(parseStr), m
 
     def parseDT(self, datetimeString, sourceTime=None,
                 tzinfo=None, version=None):
@@ -1867,7 +1869,7 @@ class Calendar(object):
                                   self._partialParseTimeStr,
                                   self._partialParseMeridian,
                                   self._partialParseTimeStd):
-                    retS, retTime, matched = parseMeth(s, sourceTime)
+                    retS, retTime, matched, _ = parseMeth(s, sourceTime)
                     if matched:
                         s, sourceTime = retS.strip(), retTime
                         break
