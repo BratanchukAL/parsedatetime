@@ -1,4 +1,9 @@
 *.py[co]
+foo.py
+
+# IDE
+.idea/
+.vscode
 
 # Packages
 *.egg
@@ -18,10 +23,25 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
+.codecov-token
 .tox
+nosetests.xml
+htmlcov
+coverage.xml
 
 #Translations
 *.mo
 
 #Mr Developer
 .mr.developer.cfg
+
+# vim
+*.swp
+*.swo
+
+.cache
+.eggs
+.mypy_cache
+
+violations.txt
+.python-version
