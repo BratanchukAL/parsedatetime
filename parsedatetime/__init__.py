@@ -2303,7 +2303,11 @@ class Constants(object):
     """
 
     def __init__(self, localeID=None, usePyICU=True,
-                 fallbackLocales=['en_US']):
+                 fallbackLocales=None):
+
+        if fallbackLocales is None:
+            fallbackLocales = ['en_US']
+
         self.localeID = localeID
         self.fallbackLocales = fallbackLocales[:]
 
