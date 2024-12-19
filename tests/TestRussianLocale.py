@@ -102,9 +102,9 @@ class test(unittest.TestCase):
     def testdayOffsets(self):
         def get_datetime(tuple_time):
             return datetime.datetime(*tuple_time[:6]).date()
-    
+
         now = datetime.datetime.today().date()
-    
+
         self.assertEqual(
             get_datetime(self.cal.parse("вчера")[0]),
             now - datetime.timedelta(days=1)
@@ -113,15 +113,31 @@ class test(unittest.TestCase):
             get_datetime(self.cal.parse("завтра")[0]),
             now + datetime.timedelta(days=1)
         )
-    
+
         self.assertEqual(
             get_datetime(self.cal.parse("позавчера")[0]),
             now - datetime.timedelta(days=2)
         )
-    
+
         self.assertEqual(
             get_datetime(self.cal.parse("послезавтра")[0]),
             now + datetime.timedelta(days=2)
+        )
+
+    def testDayNumberOffsets(self):
+        start_dt = datetime.date(2014, 10, 25)
+        start = start_dt.timetuple()
+
+        def get_datetime(tuple_time):
+            return datetime.datetime(*tuple_time[:6]).date()
+
+        self.assertEqual(
+            get_datetime(self.cal.parse("за 3 дня", sourceTime=start)[0]),
+            start_dt + datetime.timedelta(days=3)
+        )
+        self.assertEqual(
+            get_datetime(self.cal.parse("за 24 месяца", sourceTime=start)[0]),
+            start_dt + datetime.timedelta(days=30*24+11)
         )
 
 
