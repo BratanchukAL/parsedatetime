@@ -33,6 +33,7 @@ import datetime
 import calendar
 import contextlib
 import email.utils
+from typing import Optional
 
 from .pdt_locales import (locales as _locales,
                           get_icu, load_locale)
@@ -1890,6 +1891,57 @@ class Calendar(object):
             return sourceTime, ctx
         else:
             return sourceTime, ctx.dateTimeFlag
+
+    def parse_only_date(self, datetimeString, sourceTime=None) -> Optional:
+        debug and logging.debug('parse()')
+
+        datetimeString = re.sub(r'(\w)\.(\s)', r'\1\2', datetimeString)
+        datetimeString = re.sub(r'(\w)[\'"](\s|$)', r'\1 \2', datetimeString)
+        datetimeString = re.sub(r'(\s|^)[\'"](\w)', r'\1 \2', datetimeString)
+
+        if sourceTime:
+            if isinstance(sourceTime, datetime.datetime):
+                debug and logging.debug('coercing datetime to timetuple')
+                sourceTime = sourceTime.timetuple()
+            else:
+                if not isinstance(sourceTime, time.struct_time) and \
+                        not isinstance(sourceTime, tuple):
+                    raise ValueError('sourceTime is not a struct_time')
+        else:
+            sourceTime = time.localtime()
+
+        uses_parsers = (
+            self._partialParseDateStr,
+            self._partialParseDateStd,
+        )
+
+        with self.context() as ctx:
+            s = datetimeString.lower().strip()
+            debug and logging.debug(f'remainedString (before parsing): [{s}]')
+
+            while s:
+                for parseMeth in uses_parsers:
+                    retS, retTime, matched = parseMeth(s, sourceTime)
+                    if matched:
+                        s, sourceTime = retS.strip(), retTime
+                        break
+                else:
+                    # nothing matched
+                    s = ''
+
+                debug and logging.debug(f'hasDate: [{ctx.hasDate}], hasTime: [{ctx.hasTime}]')
+                debug and logging.debug(f'remainedString: [{s}]')
+
+            # String is not parsed at all
+            if sourceTime is None:
+                debug and logging.debug(f'not parsed [{sourceTime}]')
+                sourceTime = time.localtime()
+
+        if not isinstance(sourceTime, time.struct_time):
+            sourceTime = time.struct_time(sourceTime)
+
+        return sourceTime, ctx
+
 
     def inc(self, source, month=None, year=None):
         """

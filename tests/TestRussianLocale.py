@@ -148,6 +148,43 @@ class test(unittest.TestCase):
             start_dt + datetime.timedelta(hours=4)
         )
 
+    def testOnlyDate(self):
+        start_dt = datetime.datetime(2014, 10, 25)
+        start = start_dt.timetuple()
+
+        def get_datetime(tuple_time):
+            return datetime.datetime(*tuple_time[:6])
+
+        self.assertNotEqual(
+            start_dt + datetime.timedelta(days=3),
+            get_datetime(self.cal.parse_only_date("за 3 дня", sourceTime=start)[0])
+        )
+
+        self.assertNotEqual(
+            get_datetime(self.cal.parse_only_date("за 4:01:00 часа", sourceTime=start)[0]),
+            start_dt + datetime.timedelta(hours=4, minutes=1)
+        )
+
+        self.assertEqual(
+            datetime.datetime(2014, 9, 25),
+            get_datetime(self.cal.parse_only_date("25 сентября 2014", sourceTime=start)[0])
+        )
+
+        self.assertEqual(
+            datetime.datetime(2014, 9, 25),
+            get_datetime(self.cal.parse_only_date("25 сентября 2014 года", sourceTime=start)[0])
+        )
+
+        self.assertEqual(
+            datetime.datetime(2014, 9, 25),
+            get_datetime(self.cal.parse_only_date("25.09.2014 года", sourceTime=start)[0])
+        )
+
+        self.assertEqual(
+            datetime.datetime(2014, 9, 2),
+            get_datetime(self.cal.parse_only_date("  02-9-2014 года", sourceTime=start)[0])
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
