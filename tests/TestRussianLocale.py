@@ -148,6 +148,26 @@ class test(unittest.TestCase):
             start_dt + datetime.timedelta(hours=4)
         )
 
+    def testDayNumberOffsetsMany(self):
+        start_dt = datetime.datetime(2014, 10, 25, hour=0)
+
+        self.assertListEqual(
+            [datetime.timedelta(days=3)],
+            self.cal.parse_only_durations("за 3 дня", sourceTime=start_dt)[2],
+        )
+        self.assertListEqual(
+            [datetime.timedelta(days=90)],
+            self.cal.parse_only_durations("за 90 дня", sourceTime=start_dt)[2],
+        )
+        self.assertListEqual(
+            [datetime.timedelta(days=30 * 24 + 11)],
+            self.cal.parse_only_durations("за 24 месяца", sourceTime=start_dt)[2],
+        )
+        self.assertListEqual(
+            [datetime.timedelta(hours=4)],
+            self.cal.parse_only_durations("за 4 часа", sourceTime=start_dt)[2],
+        )
+
     def testOnlyDate(self):
         start_dt = datetime.datetime(2014, 10, 25)
         start = start_dt.timetuple()

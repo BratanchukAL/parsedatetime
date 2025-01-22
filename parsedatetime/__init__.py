@@ -229,7 +229,8 @@ def _parse_date_rfc822(dateString):
 VERSION_FLAG_STYLE = 1
 VERSION_CONTEXT_STYLE = 2
 OutPartialParseTyped = Tuple[str, time.struct_time, bool, Optional[Match[AnyStr]]]
-OutParsedParseTyped = Tuple[time.struct_time, pdtContext, List[datetime.datetime]]
+OutListDateTimeParsedTyped = Tuple[time.struct_time, pdtContext, List[datetime.datetime]]
+OutListTimeDeltaParsedTyped = Tuple[time.struct_time, pdtContext, List[datetime.timedelta]]
 
 
 class Calendar(object):
@@ -1901,7 +1902,7 @@ class Calendar(object):
                                 datetimeString,
                                 sourceTime: Union[datetime.datetime, time.struct_time, tuple] = None,
                                 uses_parsers: List[Callable[[str, time.struct_time], OutPartialParseTyped]] = None,
-                                ) -> OutParsedParseTyped:
+                                ) -> OutListDateTimeParsedTyped:
         if uses_parsers is None:
             uses_parsers = (
                 self._partialParseDateStr,
@@ -1964,7 +1965,7 @@ class Calendar(object):
     def parse_only_dates(self,
                          datetimeString,
                          sourceTime: Union[datetime.datetime, time.struct_time, tuple] = None
-                         ) -> OutParsedParseTyped:
+                         ) -> OutListDateTimeParsedTyped:
         uses_parsers = [
             self._partialParseDateStr,
             self._partialParseDateStd,
@@ -1974,6 +1975,36 @@ class Calendar(object):
             sourceTime=sourceTime,
             uses_parsers=uses_parsers,
         )
+
+    def parse_only_durations(self,
+                             datetimeString,
+                             sourceTime: datetime.datetime = None
+                             ) -> OutListTimeDeltaParsedTyped:
+        remember_time = datetime.datetime(*sourceTime.timetuple()[:6])
+        uses_parsers = [
+            self._partialParseModifier,
+            self._partialParseUnits,
+            self._partialParseQUnits,
+            self._partialParseDayStr,
+            self._partialParseWeekday,
+            self._partialParseTimeStr,
+            self._partialParseMeridian,
+            self._partialParseTimeStd
+        ]
+        parsed: OutListDateTimeParsedTyped = self._parse_use_with_parsers(
+            datetimeString=datetimeString,
+            sourceTime=sourceTime,
+            uses_parsers=uses_parsers,
+        )
+        source_time, ctx, datetime_series = parsed
+
+        delta_series: List[datetime.timedelta] = []
+        for datetime_ in datetime_series:
+            delta_series.append(
+                datetime_ - remember_time
+            )
+
+        return source_time, ctx, delta_series
 
     def inc(self, source, month=None, year=None):
         """
