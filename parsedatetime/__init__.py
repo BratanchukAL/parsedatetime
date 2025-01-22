@@ -33,7 +33,7 @@ import datetime
 import calendar
 import contextlib
 import email.utils
-from typing import Optional, Tuple, Match, AnyStr, List, Union
+from typing import Optional, Tuple, Match, AnyStr, List, Union, Callable
 
 from .pdt_locales import (locales as _locales,
                           get_icu, load_locale)
@@ -229,6 +229,7 @@ def _parse_date_rfc822(dateString):
 VERSION_FLAG_STYLE = 1
 VERSION_CONTEXT_STYLE = 2
 OutPartialParseTyped = Tuple[str, time.struct_time, bool, Optional[Match[AnyStr]]]
+OutParsedParseTyped = Tuple[time.struct_time, pdtContext, List[datetime.datetime]]
 
 
 class Calendar(object):
@@ -1895,10 +1896,16 @@ class Calendar(object):
         else:
             return sourceTime, ctx.dateTimeFlag
 
-    def parse_only_dates(self,
-                        datetimeString,
-                        sourceTime: Union[datetime.datetime, time.struct_time, tuple] = None
-                        ) -> Tuple[time.struct_time, pdtContext, List[time.struct_time]]:
+    def _parse_use_with_parsers(self,
+                                datetimeString,
+                                sourceTime: Union[datetime.datetime, time.struct_time, tuple] = None,
+                                uses_parsers: List[Callable[[str, time.struct_time], OutPartialParseTyped]] = None,
+                                ) -> OutParsedParseTyped:
+        if uses_parsers is None:
+            uses_parsers = (
+                self._partialParseDateStr,
+                self._partialParseDateStd,
+            )
         time_series: List[datetime.datetime] = []
         debug and logging.debug('parse_only_date()')
 
@@ -1916,11 +1923,6 @@ class Calendar(object):
                     raise ValueError('sourceTime is not a struct_time')
         else:
             sourceTime = time.localtime()
-
-        uses_parsers = (
-            self._partialParseDateStr,
-            self._partialParseDateStd,
-        )
 
         with self.context() as ctx:
             s = datetimeString.lower().strip()
@@ -1952,6 +1954,19 @@ class Calendar(object):
 
         return sourceTime, ctx, time_series
 
+    def parse_only_dates(self,
+                         datetimeString,
+                         sourceTime: Union[datetime.datetime, time.struct_time, tuple] = None
+                         ) -> OutParsedParseTyped:
+        uses_parsers = [
+            self._partialParseDateStr,
+            self._partialParseDateStd,
+        ]
+        return self._parse_use_with_parsers(
+            datetimeString=datetimeString,
+            sourceTime=sourceTime,
+            uses_parsers=uses_parsers,
+        )
 
     def inc(self, source, month=None, year=None):
         """
