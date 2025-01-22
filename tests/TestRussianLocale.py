@@ -157,32 +157,49 @@ class test(unittest.TestCase):
 
         self.assertNotEqual(
             start_dt + datetime.timedelta(days=3),
-            get_datetime(self.cal.parse_only_date("за 3 дня", sourceTime=start)[0])
+            get_datetime(self.cal.parse_only_dates("за 3 дня", sourceTime=start)[0])
         )
 
         self.assertNotEqual(
-            get_datetime(self.cal.parse_only_date("за 4:01:00 часа", sourceTime=start)[0]),
+            get_datetime(self.cal.parse_only_dates("за 4:01:00 часа", sourceTime=start)[0]),
             start_dt + datetime.timedelta(hours=4, minutes=1)
         )
 
         self.assertEqual(
             datetime.datetime(2014, 9, 25),
-            get_datetime(self.cal.parse_only_date("25 сентября 2014", sourceTime=start)[0])
+            get_datetime(self.cal.parse_only_dates("25 сентября 2014", sourceTime=start)[0])
         )
 
         self.assertEqual(
             datetime.datetime(2014, 9, 25),
-            get_datetime(self.cal.parse_only_date("25 сентября 2014 года", sourceTime=start)[0])
+            get_datetime(self.cal.parse_only_dates("25 сентября 2014 года", sourceTime=start)[0])
         )
 
         self.assertEqual(
             datetime.datetime(2014, 9, 25),
-            get_datetime(self.cal.parse_only_date("25.09.2014 года", sourceTime=start)[0])
+            get_datetime(self.cal.parse_only_dates("25.09.2014 года", sourceTime=start)[0])
         )
 
         self.assertEqual(
             datetime.datetime(2014, 9, 2),
-            get_datetime(self.cal.parse_only_date("  02-9-2014 года", sourceTime=start)[0])
+            get_datetime(self.cal.parse_only_dates("  02-9-2014 года", sourceTime=start)[0])
+        )
+
+    def testOnlyDatesMany(self):
+        start_dt = datetime.datetime(2014, 10, 25)
+        start = start_dt.timetuple()
+
+        def get_datetime(tuple_time):
+            return datetime.datetime(*tuple_time[:6])
+
+        self.assertListEqual(
+            [],
+            self.cal.parse_only_dates("от года до года", sourceTime=start)[2]
+        )
+
+        self.assertListEqual(
+            [datetime.datetime(2014, 9, 2), datetime.datetime(2014, 9, 6)],
+            self.cal.parse_only_dates("от 02-9-2014 года до 06-9-2014 года", sourceTime=start)[2]
         )
 
 

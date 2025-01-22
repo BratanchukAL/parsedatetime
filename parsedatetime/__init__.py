@@ -33,7 +33,7 @@ import datetime
 import calendar
 import contextlib
 import email.utils
-from typing import Optional, Tuple, Match, AnyStr
+from typing import Optional, Tuple, Match, AnyStr, List, Union
 
 from .pdt_locales import (locales as _locales,
                           get_icu, load_locale)
@@ -229,6 +229,7 @@ def _parse_date_rfc822(dateString):
 VERSION_FLAG_STYLE = 1
 VERSION_CONTEXT_STYLE = 2
 OutPartialParseTyped = Tuple[str, time.struct_time, bool, Optional[Match[AnyStr]]]
+
 
 class Calendar(object):
 
@@ -1894,8 +1895,12 @@ class Calendar(object):
         else:
             return sourceTime, ctx.dateTimeFlag
 
-    def parse_only_date(self, datetimeString, sourceTime=None) -> Optional:
-        debug and logging.debug('parse()')
+    def parse_only_dates(self,
+                        datetimeString,
+                        sourceTime: Union[datetime.datetime, time.struct_time, tuple] = None
+                        ) -> Tuple[time.struct_time, pdtContext, List[time.struct_time]]:
+        time_series: List[datetime.datetime] = []
+        debug and logging.debug('parse_only_date()')
 
         datetimeString = re.sub(r'(\w)\.(\s)', r'\1\2', datetimeString)
         datetimeString = re.sub(r'(\w)[\'"](\s|$)', r'\1 \2', datetimeString)
@@ -1921,15 +1926,18 @@ class Calendar(object):
             s = datetimeString.lower().strip()
             debug and logging.debug(f'remainedString (before parsing): [{s}]')
 
-            while s:
-                for parseMeth in uses_parsers:
-                    retS, retTime, matched = parseMeth(s, sourceTime)
+            for parseMeth in uses_parsers:
+                while s:
+                    retS, retTime, matched, match_obj = parseMeth(s, sourceTime)
                     if matched:
                         s, sourceTime = retS.strip(), retTime
+                        time_series.append(datetime.datetime(*sourceTime[:6]))
+                    else:
+                        # nothing matched with current parser
                         break
-                else:
-                    # nothing matched
-                    s = ''
+            else:
+                # nothing matched
+                s = ''
 
                 debug and logging.debug(f'hasDate: [{ctx.hasDate}], hasTime: [{ctx.hasTime}]')
                 debug and logging.debug(f'remainedString: [{s}]')
@@ -1942,7 +1950,7 @@ class Calendar(object):
         if not isinstance(sourceTime, time.struct_time):
             sourceTime = time.struct_time(sourceTime)
 
-        return sourceTime, ctx
+        return sourceTime, ctx, time_series
 
 
     def inc(self, source, month=None, year=None):
