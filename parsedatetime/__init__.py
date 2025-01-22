@@ -239,7 +239,7 @@ class Calendar(object):
     The text can either be 'normal' date values or it can be human readable.
     """
 
-    def __init__(self, constants=None, version=VERSION_CONTEXT_STYLE):
+    def __init__(self, constants: 'Constants' =None, version=VERSION_CONTEXT_STYLE):
         """
         Default constructor for the L{Calendar} class.
 
@@ -1734,6 +1734,7 @@ class Calendar(object):
 
         # HH:MM(:SS) time strings
         m = self.ptc.CRE_TIMEHMS.search(s)
+        # if m is not None and m.group('tsep'):
         if m is not None:
 
             if m.group('seconds') is not None:
@@ -1928,21 +1929,27 @@ class Calendar(object):
             s = datetimeString.lower().strip()
             debug and logging.debug(f'remainedString (before parsing): [{s}]')
 
-            for parseMeth in uses_parsers:
-                while s:
-                    retS, retTime, matched, match_obj = parseMeth(s, sourceTime)
+            time_partial: Union[time.struct_time, tuple] = sourceTime
+            has_matched = True
+
+            while s and has_matched:
+                time_partial = sourceTime
+                has_matched = False
+
+                for parseMeth in uses_parsers:
+                    retS, retTime, matched, match_obj = parseMeth(s, time_partial)
                     if matched:
-                        s, sourceTime = retS.strip(), retTime
-                        time_series.append(datetime.datetime(*sourceTime[:6]))
-                    else:
-                        # nothing matched with current parser
-                        break
-            else:
-                # nothing matched
-                s = ''
+                        s, time_partial = retS.strip(), retTime
+                        has_matched = True
+                else:
+                    if has_matched:
+                        time_series.append(datetime.datetime(*time_partial[:6]))
 
                 debug and logging.debug(f'hasDate: [{ctx.hasDate}], hasTime: [{ctx.hasTime}]')
                 debug and logging.debug(f'remainedString: [{s}]')
+
+            if time_series:
+                sourceTime = time_series[-1].timetuple()
 
             # String is not parsed at all
             if sourceTime is None:
@@ -2665,7 +2672,7 @@ class Constants(object):
                                    {modifiers}
                                )\b'''.format(**self.locale.re_values)
 
-        self.RE_TIMEHMS = r'''([\s(\["'-]|^)
+        self.RE_TIMEHMS = r'''([\s(\["']|^)
                               (?P<hours>\d\d?)
                               (?P<tsep>{timeseparator}|)
                               (?P<minutes>\d\d)
@@ -2675,7 +2682,7 @@ class Constants(object):
                                   )
                               )?\b'''.format(**self.locale.re_values)
 
-        self.RE_TIMEHMS2 = r'''([\s(\["'-]|^)
+        self.RE_TIMEHMS2 = r'''([\s(\["']|^)
                                (?P<hours>\d\d?)
                                (?:
                                    (?P<tsep>{timeseparator}|)

@@ -199,7 +199,12 @@ class test(unittest.TestCase):
 
         self.assertListEqual(
             [datetime.datetime(2014, 9, 2), datetime.datetime(2014, 9, 6)],
-            self.cal.parse_only_dates("от 02-9-2014 года до 06-9-2014 года", sourceTime=start)[2]
+            self.cal.parse_only_dates("от 02-9-2014  до 06-9-2014 ", sourceTime=start)[2]
+        )
+
+        self.assertListEqual(
+            [datetime.datetime(2006, 9, 25)],
+            self.cal.parse_only_dates("25 сентября 2006 23:05", sourceTime=start)[2]
         )
 
 
