@@ -156,8 +156,8 @@ class test(unittest.TestCase):
             self.cal.parse_only_durations("от 3 дней и до 8 дней", sourceTime=start_dt)[2],
         )
         self.assertListEqual(
-            [datetime.timedelta(days=90), datetime.timedelta(days=180)],
-            self.cal.parse_only_durations("от 90 дней до 180 д", sourceTime=start_dt)[2],
+            [datetime.timedelta(days=90), datetime.timedelta(days=159)],
+            self.cal.parse_only_durations("от 90 дней до 159 д", sourceTime=start_dt)[2],
         )
         self.assertListEqual(
             [datetime.timedelta(days=30 * 24 + 11), ],

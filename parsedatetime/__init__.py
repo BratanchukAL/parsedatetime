@@ -1984,12 +1984,12 @@ class Calendar(object):
         uses_parsers = [
             self._partialParseModifier,
             self._partialParseUnits,
-            self._partialParseQUnits,
+            # self._partialParseQUnits,
             self._partialParseDayStr,
             self._partialParseWeekday,
             self._partialParseTimeStr,
             self._partialParseMeridian,
-            self._partialParseTimeStd
+            # self._partialParseTimeStd,  # `159, 739` is time!
         ]
         parsed: OutListDateTimeParsedTyped = self._parse_use_with_parsers(
             datetimeString=datetimeString,
