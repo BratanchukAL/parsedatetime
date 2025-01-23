@@ -152,20 +152,20 @@ class test(unittest.TestCase):
         start_dt = datetime.datetime(2014, 10, 25, hour=0)
 
         self.assertListEqual(
-            [datetime.timedelta(days=3)],
-            self.cal.parse_only_durations("за 3 дня", sourceTime=start_dt)[2],
+            [datetime.timedelta(days=3), datetime.timedelta(days=8)],
+            self.cal.parse_only_durations("от 3 дней и до 8 дней", sourceTime=start_dt)[2],
         )
         self.assertListEqual(
-            [datetime.timedelta(days=90)],
-            self.cal.parse_only_durations("за 90 дня", sourceTime=start_dt)[2],
+            [datetime.timedelta(days=90), datetime.timedelta(days=180)],
+            self.cal.parse_only_durations("от 90 дней до 180 д", sourceTime=start_dt)[2],
         )
         self.assertListEqual(
-            [datetime.timedelta(days=30 * 24 + 11)],
+            [datetime.timedelta(days=30 * 24 + 11), ],
             self.cal.parse_only_durations("за 24 месяца", sourceTime=start_dt)[2],
         )
         self.assertListEqual(
-            [datetime.timedelta(hours=4)],
-            self.cal.parse_only_durations("за 4 часа", sourceTime=start_dt)[2],
+            [datetime.timedelta(hours=4), datetime.timedelta(days=60)],
+            self.cal.parse_only_durations("за 4 часа или до 60 дней", sourceTime=start_dt)[2],
         )
 
     def testOnlyDate(self):
