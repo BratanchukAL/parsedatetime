@@ -152,6 +152,16 @@ class test(unittest.TestCase):
         start_dt = datetime.datetime(2014, 10, 25, hour=0)
 
         self.assertListEqual(
+            [datetime.timedelta(days=731)],
+            self.cal.parse_only_durations("более 2 лет", sourceTime=start_dt)[2],
+        )
+
+        self.assertListEqual(
+            [datetime.timedelta(days=731)],
+            self.cal.parse_only_durations("<tag>от 2 лет</tag>", sourceTime=start_dt)[2],
+        )
+
+        self.assertListEqual(
             [datetime.timedelta(days=3), datetime.timedelta(days=8)],
             self.cal.parse_only_durations("от 3 дней и до 8 дней", sourceTime=start_dt)[2],
         )
