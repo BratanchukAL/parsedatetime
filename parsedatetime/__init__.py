@@ -2576,6 +2576,7 @@ class Constants(object):
             self.locale.re_values['units'] = re_join(units)
             self.locale.re_values['modifiers'] = re_join(self.locale.Modifiers)
             self.locale.re_values['sources'] = re_join(self.locale.re_sources)
+            self.locale.re_values['digit_suffix'] = self.locale.re_values.get('digit_suffix', '')
 
             # For distinguishing numeric dates from times, look for timeSep
             # and meridian, if specified in the locale
@@ -2689,7 +2690,7 @@ class Constants(object):
 
         self.RE_UNITS = r'''\b(?P<qty>
                                 -?
-                                (?:\d+(?:{decimal_mark}\d+|)|(?:{numbers})\b)\s*
+                                (?:\d+(?:{decimal_mark}\d+|)\s*(?:{digit_suffix})*|(?:{numbers})\b)\s*
                                 (?P<units>{units})
                             )\b'''.format(**self.locale.re_values)
 
