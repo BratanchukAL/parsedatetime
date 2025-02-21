@@ -189,11 +189,12 @@ class test(unittest.TestCase):
                                           " 2-х лет"
                                           " 5-и лет"
                                           " 5и лет"
-                                          " 1-о лет", sourceTime=start_dt)[2],
+                                          " 1-о года", sourceTime=start_dt)[2],
         )
 
         self.assertListEqual(
             [
+                datetime.timedelta(days=365),
                 datetime.timedelta(days=731),
                 datetime.timedelta(days=1096),
                 datetime.timedelta(days=1461),
@@ -201,7 +202,8 @@ class test(unittest.TestCase):
             ],
             self.cal.parse_only_durations(
                 "Опыт разработки на Python 3 в качестве backend-разработчика "
-                "не менее двух лет;"
+                " от одного года"
+                " не менее двух лет;"
                 " трех лет"
                 " четырех лет"
                 " пяти лет",
