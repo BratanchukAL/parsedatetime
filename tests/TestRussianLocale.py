@@ -171,10 +171,10 @@ class test(unittest.TestCase):
             self.cal.parse_only_durations("Нужен “свежий” опыт разработки на Python от 1 года;", sourceTime=start_dt)[2],
         )
 
-        # self.assertListEqual(
-        #     [datetime.timedelta(days=731)],
-        #     self.cal.parse_only_durations("Опыт разработки Telegram-ботов от 2-х лет", sourceTime=start_dt)[2],
-        # )
+        self.assertListEqual(
+            [datetime.timedelta(days=731)],
+            self.cal.parse_only_durations("Опыт разработки Telegram-ботов от 2-х лет", sourceTime=start_dt)[2],
+        )
 
         self.assertListEqual(
             [datetime.timedelta(days=3), datetime.timedelta(days=8)],

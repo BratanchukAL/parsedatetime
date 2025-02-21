@@ -61,6 +61,7 @@ re_values.update({
     'timeseparator': ':',
     'rangeseparator': '-',
     'daysuffix': 'ого|ой|ий|тье',
+    'digit_suffix': '-х',
     'qunits': 'д|мес|г|ч|н|м|с',
     'now': ['сейчас'],
 })

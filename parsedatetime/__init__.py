@@ -1388,6 +1388,10 @@ class Calendar(object):
                     parseStr = s
                     s = ''
 
+                if m.group('digit_suffix'):
+                    ds = m.group('digit_suffix')
+                    parseStr = parseStr.replace(ds, '')
+
         if parseStr:
             debug and logging.debug(f'found (units) [{parseStr}][{chunk1}][{chunk2}]')
             sourceTime = self._evalUnits(parseStr, sourceTime)
@@ -2688,11 +2692,14 @@ class Constants(object):
         self.RE_UNITS_ONLY = (r'''\b({units})\b'''
                               .format(**self.locale.re_values))
 
-        self.RE_UNITS = r'''\b(?P<qty>
-                                -?
-                                (?:\d+(?:{decimal_mark}\d+|)\s*(?:{digit_suffix})*|(?:{numbers})\b)\s*
-                                (?P<units>{units})
-                            )\b'''.format(**self.locale.re_values)
+        self.RE_UNITS = (r"\b(?P<qty>"
+                             r"-?"
+                             r"(?:"
+                                r"\d+(?:{decimal_mark}\d+|)\s*(?P<digit_suffix>{digit_suffix})*"
+                                r"|(?:{numbers})\b"
+                             r")"
+                             r"\s*(?P<units>{units})"
+                         r")\b").format(**self.locale.re_values)
 
         self.RE_QUNITS = r'''\b(?P<qty>
                                  -?
