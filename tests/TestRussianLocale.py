@@ -183,13 +183,20 @@ class test(unittest.TestCase):
                 datetime.timedelta(days=1826),
                 datetime.timedelta(days=1826),
                 datetime.timedelta(days=365),
+                datetime.timedelta(days=365),
+                datetime.timedelta(days=365),
+                datetime.timedelta(days=365),
             ],
             self.cal.parse_only_durations("Опыт разработки Telegram-ботов "
                                           "от 2х лет"
                                           " 2-х лет"
                                           " 5-и лет"
                                           " 5и лет"
-                                          " 1-о года", sourceTime=start_dt)[2],
+                                          " 1 года"
+                                          " 1-о года"
+                                          " 1-го года"
+                                          " 1го года",
+                                          sourceTime=start_dt)[2],
         )
 
         self.assertListEqual(

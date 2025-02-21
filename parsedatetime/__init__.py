@@ -1390,7 +1390,7 @@ class Calendar(object):
 
                 if m.group('digit_suffix'):
                     ds = m.group('digit_suffix')
-                    parseStr = parseStr.replace(ds, '')
+                    parseStr = parseStr.replace(ds, '', 1)
 
         if parseStr:
             debug and logging.debug(f'found (units) [{parseStr}][{chunk1}][{chunk2}]')
