@@ -162,6 +162,21 @@ class test(unittest.TestCase):
         )
 
         self.assertListEqual(
+            [],
+            self.cal.parse_only_durations("Опыт работы с Django 2.* и Django 3.*, Python 3.7+;", sourceTime=start_dt)[2],
+        )
+
+        self.assertListEqual(
+            [datetime.timedelta(days=365)],
+            self.cal.parse_only_durations("Нужен “свежий” опыт разработки на Python от 1 года;", sourceTime=start_dt)[2],
+        )
+
+        # self.assertListEqual(
+        #     [datetime.timedelta(days=731)],
+        #     self.cal.parse_only_durations("Опыт разработки Telegram-ботов от 2-х лет", sourceTime=start_dt)[2],
+        # )
+
+        self.assertListEqual(
             [datetime.timedelta(days=3), datetime.timedelta(days=8)],
             self.cal.parse_only_durations("от 3 дней и до 8 дней", sourceTime=start_dt)[2],
         )
