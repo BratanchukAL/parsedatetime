@@ -1984,6 +1984,11 @@ class Calendar(object):
                              datetimeString,
                              sourceTime: datetime.datetime = None
                              ) -> OutListTimeDeltaParsedTyped:
+        if sourceTime:
+            pass
+        else:
+            sourceTime = datetime.datetime(2025, 1, 1, hour=0)
+
         remember_time = datetime.datetime(*sourceTime.timetuple()[:6])
         uses_parsers = [
             self._partialParseModifier,
