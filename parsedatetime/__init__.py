@@ -1931,27 +1931,31 @@ class Calendar(object):
             sourceTime = time.localtime()
 
         with self.context() as ctx:
-            s = datetimeString.lower().strip()
-            debug and logging.debug(f'remainedString (before parsing): [{s}]')
+            str_splitted = self.nlp(inputString=datetimeString, sourceTime=sourceTime)
+            str_splitted = str_splitted if str_splitted else []
 
-            time_partial: Union[time.struct_time, tuple] = sourceTime
-            has_matched = True
+            for _,_,_,_, datetime_string_selected in str_splitted:
+                s = datetime_string_selected.lower().strip()
+                debug and logging.debug(f'remainedString (before parsing): [{s}]')
 
-            while s and has_matched:
-                time_partial = sourceTime
-                has_matched = False
+                time_partial: Union[time.struct_time, tuple] = sourceTime
+                has_matched = True
 
-                for parseMeth in uses_parsers:
-                    retS, retTime, matched, match_obj = parseMeth(s, time_partial)
-                    if matched:
-                        s, time_partial = retS.strip(), retTime
-                        has_matched = True
-                else:
-                    if has_matched:
-                        time_series.append(datetime.datetime(*time_partial[:6]))
+                while s and has_matched:
+                    time_partial = sourceTime
+                    has_matched = False
 
-                debug and logging.debug(f'hasDate: [{ctx.hasDate}], hasTime: [{ctx.hasTime}]')
-                debug and logging.debug(f'remainedString: [{s}]')
+                    for parseMeth in uses_parsers:
+                        retS, retTime, matched, match_obj = parseMeth(s, time_partial)
+                        if matched:
+                            s, time_partial = retS.strip(), retTime
+                            has_matched = True
+                    else:
+                        if has_matched:
+                            time_series.append(datetime.datetime(*time_partial[:6]))
+
+                    debug and logging.debug(f'hasDate: [{ctx.hasDate}], hasTime: [{ctx.hasTime}]')
+                    debug and logging.debug(f'remainedString: [{s}]')
 
             if time_series:
                 sourceTime = time_series[-1].timetuple()
@@ -2084,7 +2088,8 @@ class Calendar(object):
             d += datetime.timedelta(days=subMi * maxDay)
         return source + (d - source)
 
-    def nlp(self, inputString, sourceTime=None, version=None):
+    def nlp(self, inputString, sourceTime=None, version=None) \
+            -> Optional[List[Tuple[datetime.datetime, pdtContext, list, list, str]]]:
         """Utilizes parse() after making judgements about what datetime
         information belongs together.
 
@@ -2113,7 +2118,7 @@ class Calendar(object):
         # opposed to removing them altogether in order to
         # retain relative positions (identified by alpha, period, space).
         # this is required for some of the regex patterns to match
-        inputString = re.sub(r'(\w)(\.)(\s)', r'\1 \3', inputString).lower()
+        inputString = re.sub(r'(\w)(\.)(\s)', r'\1 \3', inputString)
         inputString = re.sub(r'(\w)(\'|")(\s|$)', r'\1 \3', inputString)
         inputString = re.sub(r'(\s|^)(\'|")(\w)', r'\1 \3', inputString)
 
@@ -2138,6 +2143,17 @@ class Calendar(object):
                     leftmost_match[2] = m.group()
                     leftmost_match[3] = 0
                     leftmost_match[4] = 'modifier'
+
+            # RANGE Quantity + Units
+            m = self.ptc.CRE_RANGE_UNITS.search(inputString[startpos:])
+            if m is not None:
+                if leftmost_match[1] == 0 or \
+                    leftmost_match[0] > m.start() + startpos:
+                    leftmost_match[0] = m.start() + startpos
+                    leftmost_match[1] = m.end() + startpos
+                    leftmost_match[2] = f"{m.group('qty1')} {m.group('units')} {m.group('qty2')} {m.group('units')}"
+                    leftmost_match[3] = 3
+                    leftmost_match[4] = 'range_units'
 
             # Quantity + Units
             m = self.ptc.CRE_UNITS.search(inputString[startpos:])
@@ -2383,9 +2399,9 @@ class Calendar(object):
                     flags,
                     matches[0][0],
                     matches[0][1],
-                    combined))
+                    matches[0][2]))
 
-        return tuple(proximity_matches)
+        return proximity_matches
 
 
 def _initSymbols(ptc):
@@ -2698,10 +2714,28 @@ class Constants(object):
                               .format(**self.locale.re_values))
 
         self.RE_UNITS = (r"\b(?P<qty>"
-                             r"-?"
+                             r"([^\d]-)?"
                              r"(?:"
                                 r"\d+(?:{decimal_mark}\d+|)\s*(?P<digit_suffix>{digit_suffix})*"
                                 r"|(?:{numbers})\b"
+                             r")"
+                             r"\s*(?P<units>{units})"
+                         r")\b").format(**self.locale.re_values)
+
+        self.RE_RANGE_UNITS = (
+                         r"\b"
+                         r"(?P<qty1>"
+                             r"(?:"
+                                 r"\d+"
+                                 r"(?:{decimal_mark}\d+|)\s*(?:{digit_suffix})*"
+                                 r"|(?:{numbers})"                                 
+                             r")"
+                         r")"
+                         r"(?P<rangeseparator>\s*-\s+|\s+[^{rangeseparator}]|{rangeseparator})"
+                         r"(?P<qty2>"
+                             r"(?:"
+                                 r"\d+(?:{decimal_mark}\d+|)\s*(?P<digit_suffix>{digit_suffix})*"
+                                 r"|(?:{numbers})\b"
                              r")"
                              r"\s*(?P<units>{units})"
                          r")\b").format(**self.locale.re_values)
@@ -2854,6 +2888,7 @@ class Constants(object):
                            'CRE_NUMBER': self.RE_NUMBER,
                            'CRE_UNITS': self.RE_UNITS,
                            'CRE_UNITS_ONLY': self.RE_UNITS_ONLY,
+                           'CRE_RANGE_UNITS': self.RE_RANGE_UNITS,
                            'CRE_QUNITS': self.RE_QUNITS,
                            'CRE_MODIFIER': self.RE_MODIFIER,
                            'CRE_TIMEHMS': self.RE_TIMEHMS,

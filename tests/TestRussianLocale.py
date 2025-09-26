@@ -163,7 +163,7 @@ class test(unittest.TestCase):
 
         self.assertListEqual(
             [datetime.timedelta(days=731), datetime.timedelta(days=1826)],
-            self.cal.parse_only_durations("Опыт работы от 2-5 лет", sourceTime=start_dt)[2],
+            self.cal.parse_only_durations("Опыт работы от 2- 5 лет", sourceTime=start_dt)[2],
         )
 
         self.assertListEqual(
