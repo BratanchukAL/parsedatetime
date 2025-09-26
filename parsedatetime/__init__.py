@@ -2152,7 +2152,7 @@ class Calendar(object):
                     leftmost_match[0] = m.start() + startpos
                     leftmost_match[1] = m.end() + startpos
                     leftmost_match[2] = f"{m.group('qty1')} {m.group('units')} {m.group('qty2')} {m.group('units')}"
-                    leftmost_match[3] = 3
+                    leftmost_match[3] = 4
                     leftmost_match[4] = 'range_units'
 
             # Quantity + Units
@@ -2333,6 +2333,7 @@ class Calendar(object):
             date = matches[0][3] == 1
             time = matches[0][3] == 2
             units = matches[0][3] == 3
+            range_units = matches[0][3] == 4
             for i in range(1, len(matches)):
 
                 # test proximity (are there characters between matches?)
@@ -2357,11 +2358,23 @@ class Calendar(object):
                             matches[from_match_index][0],
                             matches[i - 1][1],
                             combined))
+                    elif range_units:
+                        combined = matches[i - 1][2]
+                        parsed_datetime, flags = self.parse(combined,
+                                                            sourceTime,
+                                                            version)
+                        proximity_matches.append((
+                            datetime.datetime(*parsed_datetime[:6]),
+                            flags,
+                            matches[i - 1][0],
+                            matches[i - 1][1],
+                            combined))
                     # not in proximity, reset starting from current
                     from_match_index = i
                     date = matches[i][3] == 1
                     time = matches[i][3] == 2
                     units = matches[i][3] == 3
+                    range_units = matches[i][3] == 4
                     continue
                 else:
                     if matches[i][3] == 1:
@@ -2383,6 +2396,18 @@ class Calendar(object):
                     flags,
                     matches[from_match_index][0],
                     matches[len(matches) - 1][1],
+                    combined))
+            elif range_units:
+                m = matches[len(matches) - 1]
+                combined = m[2]
+                parsed_datetime, flags = self.parse(combined,
+                                                    sourceTime,
+                                                    version)
+                proximity_matches.append((
+                    datetime.datetime(*parsed_datetime[:6]),
+                    flags,
+                    m[0],
+                    m[1],
                     combined))
 
         elif len(matches) == 0:
